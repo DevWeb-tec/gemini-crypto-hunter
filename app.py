@@ -13,132 +13,28 @@ from ta.volume import OnBalanceVolumeIndicator
 
 # --- CONFIGURAÇÃO INICIAL ---
 load_dotenv()
-
 st.set_page_config(page_title="Gemini Whale Hunter", page_icon="🐋", layout="wide")
 
-# --- CSS (ESTILO VISUAL) ---
-st.markdown("""
-<style>
-    /* 1. Imagem de Fundo */
-    [data-testid="stAppViewContainer"] {
-        background-image: url("https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2832&auto=format&fit=crop");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-    
-    /* 2. Fundo Transparente para Leitura */
-    .main .block-container {
-        background-color: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(5px);
-        padding: 2rem !important;
-        border-radius: 20px;
-        max-width: 1400px;
-    }
+# --- GERENCIAMENTO DE ESTADO (Criação de "Páginas") ---
+if 'page' not in st.session_state:
+    st.session_state.page = 'home' # Começa na Home
 
-    /* 3. Título GIGANTE */
-    .big-title {
-        font-size: 4.5rem !important;
-        font-weight: 900 !important;
-        text-align: center !important;
-        color: #ffffff !important;
-        text-transform: uppercase;
-        text-shadow: 0 0 20px #00d2ff;
-        margin-bottom: 0px !important;
-    }
-    
-    /* 4. Legenda */
-    .subtitle {
-        font-size: 1.5rem !important;
-        text-align: center !important;
-        color: #e2e8f0 !important;
-        font-weight: 600 !important;
-        margin-bottom: 30px !important;
-        text-shadow: 2px 2px 4px #000000;
-    }
+def ir_para_analise():
+    st.session_state.page = 'analise'
 
-    /* 5. Ícones */
-    .crypto-bar {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 40px;
-        flex-wrap: wrap;
-    }
-    .crypto-icon {
-        width: 60px;
-        height: 60px;
-        transition: transform 0.2s;
-        filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
-    }
-    .crypto-icon:hover {
-        transform: scale(1.2);
-    }
+def voltar_home():
+    st.session_state.page = 'home'
 
-    /* 6. ESTILO DO BOTÃO (Texto Grosso e Visível) */
-    div.stButton > button {
-        background: linear-gradient(90deg, #FF416C 0%, #FF4B2B 100%) !important;
-        
-        /* TEXTO PRETO E GROSSO */
-        color: #000000 !important; 
-        font-size: 26px !important; /* Letra Maior */
-        font-weight: 900 !important; /* Ultra Negrito */
-        text-transform: uppercase !important;
-        text-shadow: 0px 1px 0px rgba(255,255,255,0.4) !important; /* Borda leve para destacar */
-        
-        border: 3px solid rgba(255,255,255,0.8) !important; /* Borda branca grossa */
-        border-radius: 50px !important;
-        padding: 15px 30px !important;
-        box-shadow: 0px 0px 30px rgba(255, 65, 108, 0.6) !important;
-        transition: all 0.3s ease !important;
-        width: 100%;
-        height: auto;
-        white-space: normal !important; /* Permite que o texto quebre se precisar */
-    }
-    
-    div.stButton > button:hover {
-        transform: scale(1.05) !important;
-        box-shadow: 0px 0px 50px rgba(255, 65, 108, 1) !important;
-        color: #ffffff !important; /* Vira branco no hover */
-        border-color: #000000 !important;
-    }
-
-    /* Métricas */
-    div[data-testid="stMetricValue"] {
-        font-size: 2.2rem !important;
-        color: white !important;
-    }
-    div[data-testid="stMetricLabel"] {
-        color: #cbd5e1 !important;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# --- CABEÇALHO ---
-st.markdown('<h1 class="big-title">🐋 GEMINI CRYPTO HUNTER</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Notícias em Tempo Real</p>', unsafe_allow_html=True)
-
-# --- ÍCONES ---
-logos_html = """
-<div class="crypto-bar">
-    <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png" class="crypto-icon">
-    <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="crypto-icon">
-</div>
-"""
-st.markdown(logos_html, unsafe_allow_html=True)
-
-# --- FUNÇÕES ---
+# --- FUNÇÕES DE DADOS (Mantidas iguais) ---
 def configure_genai():
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        st.error("❌ Erro: Chave de API não encontrada no .env")
-        return None
+        # Tenta pegar dos secrets do Streamlit Cloud se não achar no .env
+        if "GOOGLE_API_KEY" in st.secrets:
+            api_key = st.secrets["GOOGLE_API_KEY"]
+        else:
+            st.error("❌ Erro: Chave de API não encontrada.")
+            return None
     genai.configure(api_key=api_key)
     return True
 
@@ -180,7 +76,7 @@ def get_ai_analysis(df, news_text):
     Aja como um Analista On-Chain Profissional.
     DADOS BTC/USD: Preço ${last['Close']:.2f} | RSI {last['RSI']:.2f} | Tendência {price_trend} | Baleias (OBV) {obv_trend}
     NOTÍCIAS: {news_text}
-    TAREFA: Análise curta e direta sobre o preço e as baleias para os próximos 3 dias.
+    TAREFA: Análise curta e direta sobre o preço e as baleias para os próximos 3 dias. Use markdown.
     """
     model = genai.GenerativeModel('gemini-2.5-flash')
     try:
@@ -189,49 +85,149 @@ def get_ai_analysis(df, news_text):
     except Exception as e:
         return f"Erro na IA: {e}"
 
-# --- INTERFACE ---
-if configure_genai():
+# --- PÁGINA 1: HOME (VISUAL 3D) ---
+def show_home():
+    # CSS Específico da Home (Imagem de Fundo)
+    st.markdown("""
+    <style>
+        [data-testid="stAppViewContainer"] {
+            background-image: url("https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=2832&auto=format&fit=crop");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+        .big-title {
+            font-size: 5rem !important;
+            font-weight: 900 !important;
+            text-align: center !important;
+            color: #ffffff !important;
+            text-shadow: 0 0 20px #00d2ff;
+            margin-top: 50px;
+        }
+        .subtitle {
+            font-size: 1.5rem !important;
+            text-align: center !important;
+            color: #e2e8f0 !important;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        /* Botão da Home */
+        div.stButton > button {
+            background: linear-gradient(90deg, #FF416C 0%, #FF4B2B 100%);
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            padding: 15px 40px;
+            border: none;
+            box-shadow: 0px 0px 20px rgba(255, 65, 108, 0.5);
+            transition: transform 0.2s;
+        }
+        div.stButton > button:hover {
+            transform: scale(1.05);
+            color: white;
+        }
+        .crypto-bar { display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap; }
+        .crypto-icon { width: 60px; height: 60px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<h1 class="big-title">🐋 GEMINI CRYPTO HUNTER</h1>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Notícias em Tempo Real</p>', unsafe_allow_html=True)
     
-    # --- AJUSTE DE COLUNAS PARA DEIXAR O BOTÃO MAIS ESTREITO ---
-    # Usando [3, 2, 3] significa: 
-    # Esquerda: 37.5% da tela (Vazio)
-    # Meio:     25% da tela (Botão) -> Fica bem mais estreito!
-    # Direita:  37.5% da tela (Vazio)
-    col_left, col_center, col_right = st.columns([3, 2, 3])
+    # Ícones
+    logos_html = """
+    <div class="crypto-bar">
+        <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="crypto-icon">
+        <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" class="crypto-icon">
+        <img src="https://cryptologos.cc/logos/solana-sol-logo.png" class="crypto-icon">
+        <img src="https://cryptologos.cc/logos/bnb-bnb-logo.png" class="crypto-icon">
+        <img src="https://cryptologos.cc/logos/xrp-xrp-logo.png" class="crypto-icon">
+        <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" class="crypto-icon">
+    </div>
+    """
+    st.markdown(logos_html, unsafe_allow_html=True)
     
-    with col_center:
-        analyze_click = st.button("🚀 RASTREAR BALEIAS E ANALISAR MERCADOS", use_container_width=True)
+    st.write("")
+    st.write("")
+    
+    col1, col2, col3 = st.columns([3, 2, 3])
+    with col2:
+        # O botão agora chama a função que muda o estado da página
+        st.button("🚀 RASTREAR BALEIAS", on_click=ir_para_analise, use_container_width=True)
 
-    if analyze_click:
-        with st.spinner("🛰️ Analisando dados on-chain..."):
-            try:
-                df = get_data()
-                if df is not None:
-                    news = get_news()
-                    latest = df.iloc[-1]
-                    prev = df.iloc[-2]
-                    
-                    st.markdown("---")
-                    
-                    # Métricas
-                    c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("Preço", f"${latest['Close']:,.2f}")
-                    c2.metric("RSI", f"{latest['RSI']:.0f}")
-                    c3.metric("Tendência", "Alta 🐂" if latest['EMA_20'] > latest['EMA_50'] else "Baixa 🐻")
-                    obv_diff = latest['OBV'] - prev['OBV']
-                    c4.metric("Baleias (OBV)", "Entrando" if obv_diff > 0 else "Saindo", delta=f"{obv_diff:,.0f}")
+# --- PÁGINA 2: ANÁLISE (FUNDO SÓLIDO LIMPO) ---
+def show_analysis():
+    # CSS Específico da Análise (Remove imagem, põe fundo escuro profissional)
+    st.markdown("""
+    <style>
+        [data-testid="stAppViewContainer"] {
+            background-image: none !important;
+            background-color: #0e1117 !important; /* Fundo Escuro Profissional */
+        }
+        /* Estilo dos Cards de Métricas */
+        div[data-testid="stMetric"] {
+            background-color: #1e2329;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #333;
+        }
+        div[data-testid="stMetricLabel"] { color: #8b949e; }
+        div[data-testid="stMetricValue"] { color: #e6edf3; }
+        
+        /* Botão Voltar */
+        div.stButton > button {
+            background-color: transparent;
+            border: 1px solid #30363d;
+            color: #e6edf3;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
-                    # Gráfico
-                    fig = go.Figure()
-                    fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name="Preço", line=dict(color='#fbbf24', width=3)))
-                    fig.add_trace(go.Scatter(x=df.index, y=df['OBV'], name="Baleias", line=dict(color='#00d2ff', width=2), yaxis='y2', fill='tozeroy'))
-                    fig.update_layout(height=500, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
-                                      yaxis2=dict(overlaying='y', side='right'), 
-                                      font=dict(color='white'))
-                    st.plotly_chart(fig, use_container_width=True)
+    # Botão de Voltar no topo
+    st.button("⬅️ Voltar para Capa", on_click=voltar_home)
 
-                    # IA
-                    st.info(get_ai_analysis(df, news))
-                    
-            except Exception as e:
-                st.error(f"Erro: {e}")
+    if configure_genai():
+        with st.spinner("🤖 O Gemini está lendo os dados on-chain..."):
+            df = get_data()
+            if df is not None:
+                news = get_news()
+                latest = df.iloc[-1]
+                prev = df.iloc[-2]
+                
+                st.markdown("## 📊 Painel de Controle das Baleias")
+                
+                # Métricas
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Preço BTC", f"${latest['Close']:,.2f}")
+                c2.metric("RSI (Força)", f"{latest['RSI']:.0f}")
+                c3.metric("Tendência", "Alta 🐂" if latest['EMA_20'] > latest['EMA_50'] else "Baixa 🐻")
+                obv_diff = latest['OBV'] - prev['OBV']
+                c4.metric("Fluxo Baleias", "Entrando 🟢" if obv_diff > 0 else "Saindo 🔴", delta=f"{obv_diff:,.0f}")
+
+                # Gráfico
+                st.markdown("---")
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name="Preço", line=dict(color='#fbbf24', width=3)))
+                fig.add_trace(go.Scatter(x=df.index, y=df['OBV'], name="Volume Baleias", line=dict(color='#00d2ff', width=2), yaxis='y2', fill='tozeroy'))
+                fig.update_layout(
+                    height=500, 
+                    title="Preço vs. Acumulação das Baleias (6 Meses)",
+                    template="plotly_dark", # Tema escuro nativo do gráfico
+                    yaxis2=dict(overlaying='y', side='right'), 
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)'
+                )
+                st.plotly_chart(fig, use_container_width=True)
+
+                # IA
+                st.markdown("### 🧠 Análise do Gemini")
+                st.info(get_ai_analysis(df, news))
+            else:
+                st.error("Erro ao carregar dados.")
+
+# --- CONTROLADOR PRINCIPAL ---
+if st.session_state.page == 'home':
+    show_home()
+elif st.session_state.page == 'analise':
+    show_analysis()
