@@ -15,9 +15,9 @@ from ta.volume import OnBalanceVolumeIndicator
 load_dotenv()
 st.set_page_config(page_title="Gemini Whale Hunter", page_icon="🐋", layout="wide")
 
-# --- GERENCIAMENTO DE ESTADO (Criação de "Páginas") ---
+# --- GERENCIAMENTO DE ESTADO ---
 if 'page' not in st.session_state:
-    st.session_state.page = 'home' # Começa na Home
+    st.session_state.page = 'home'
 
 def ir_para_analise():
     st.session_state.page = 'analise'
@@ -25,11 +25,10 @@ def ir_para_analise():
 def voltar_home():
     st.session_state.page = 'home'
 
-# --- FUNÇÕES DE DADOS (Mantidas iguais) ---
+# --- FUNÇÕES DE DADOS ---
 def configure_genai():
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        # Tenta pegar dos secrets do Streamlit Cloud se não achar no .env
         if "GOOGLE_API_KEY" in st.secrets:
             api_key = st.secrets["GOOGLE_API_KEY"]
         else:
@@ -76,7 +75,7 @@ def get_ai_analysis(df, news_text):
     Aja como um Analista On-Chain Profissional.
     DADOS BTC/USD: Preço ${last['Close']:.2f} | RSI {last['RSI']:.2f} | Tendência {price_trend} | Baleias (OBV) {obv_trend}
     NOTÍCIAS: {news_text}
-    TAREFA: Análise curta e direta sobre o preço e as baleias para os próximos 3 dias. Use markdown.
+    TAREFA: Análise curta e direta sobre o preço e as baleias para os próximos 3 dias. Use markdown, negrito e emojis.
     """
     model = genai.GenerativeModel('gemini-2.5-flash')
     try:
@@ -87,7 +86,6 @@ def get_ai_analysis(df, news_text):
 
 # --- PÁGINA 1: HOME (VISUAL 3D) ---
 def show_home():
-    # CSS Específico da Home (Imagem de Fundo)
     st.markdown("""
     <style>
         [data-testid="stAppViewContainer"] {
@@ -111,21 +109,20 @@ def show_home():
             color: #e2e8f0 !important;
             text-shadow: 2px 2px 4px #000000;
         }
-        /* Botão da Home */
         div.stButton > button {
             background: linear-gradient(90deg, #FF416C 0%, #FF4B2B 100%);
-            color: white;
+            color: black;
             font-size: 24px;
-            font-weight: bold;
+            font-weight: 900;
             border-radius: 50px;
             padding: 15px 40px;
-            border: none;
+            border: 3px solid white;
             box-shadow: 0px 0px 20px rgba(255, 65, 108, 0.5);
-            transition: transform 0.2s;
         }
         div.stButton > button:hover {
             transform: scale(1.05);
             color: white;
+            border-color: black;
         }
         .crypto-bar { display: flex; justify-content: center; gap: 20px; margin-top: 30px; flex-wrap: wrap; }
         .crypto-icon { width: 60px; height: 60px; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
@@ -135,7 +132,6 @@ def show_home():
     st.markdown('<h1 class="big-title">🐋 GEMINI CRYPTO HUNTER</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Notícias em Tempo Real</p>', unsafe_allow_html=True)
     
-    # Ícones
     logos_html = """
     <div class="crypto-bar">
         <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" class="crypto-icon">
@@ -147,44 +143,54 @@ def show_home():
     </div>
     """
     st.markdown(logos_html, unsafe_allow_html=True)
-    
-    st.write("")
     st.write("")
     
     col1, col2, col3 = st.columns([3, 2, 3])
     with col2:
-        # O botão agora chama a função que muda o estado da página
-        st.button("🚀 RASTREAR BALEIAS", on_click=ir_para_analise, use_container_width=True)
+        st.button("🚀 RASTREAR BALEIAS E ANÁLISE DE MERCADO", on_click=ir_para_analise, use_container_width=True)
 
-# --- PÁGINA 2: ANÁLISE (FUNDO SÓLIDO LIMPO) ---
+# --- PÁGINA 2: ANÁLISE (FUNDO SÓLIDO + MONETIZAÇÃO) ---
 def show_analysis():
-    # CSS Específico da Análise (Remove imagem, põe fundo escuro profissional)
+    # CSS para deixar tudo bonito e legível
     st.markdown("""
     <style>
         [data-testid="stAppViewContainer"] {
             background-image: none !important;
-            background-color: #0e1117 !important; /* Fundo Escuro Profissional */
+            background-color: #0e1117 !important;
         }
-        /* Estilo dos Cards de Métricas */
-        div[data-testid="stMetric"] {
-            background-color: #1e2329;
+        /* Estilo das letras para BRANCO */
+        p, h1, h2, h3, li {
+            color: #e6edf3 !important;
+        }
+        /* Caixa da IA Personalizada */
+        .ai-box {
+            background-color: rgba(30, 41, 59, 0.7);
+            border: 1px solid #00d2ff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
+            margin-top: 20px;
+        }
+        /* Botões de Afiliados */
+        .affiliate-btn {
+            display: block;
+            width: 100%;
             padding: 15px;
+            background-color: #FCD535; /* Cor da Binance */
+            color: black;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
             border-radius: 10px;
-            border: 1px solid #333;
+            margin-bottom: 10px;
+            transition: 0.3s;
         }
-        div[data-testid="stMetricLabel"] { color: #8b949e; }
-        div[data-testid="stMetricValue"] { color: #e6edf3; }
-        
-        /* Botão Voltar */
-        div.stButton > button {
-            background-color: transparent;
-            border: 1px solid #30363d;
-            color: #e6edf3;
-        }
+        .affiliate-btn:hover { opacity: 0.8; }
+        .ledger-btn { background-color: #1C1C1C; color: white; border: 1px solid white; }
     </style>
     """, unsafe_allow_html=True)
 
-    # Botão de Voltar no topo
     st.button("⬅️ Voltar para Capa", on_click=voltar_home)
 
     if configure_genai():
@@ -213,20 +219,38 @@ def show_analysis():
                 fig.update_layout(
                     height=500, 
                     title="Preço vs. Acumulação das Baleias (6 Meses)",
-                    template="plotly_dark", # Tema escuro nativo do gráfico
+                    template="plotly_dark",
                     yaxis2=dict(overlaying='y', side='right'), 
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)'
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # IA
+                # --- ÁREA DE LUCRO (Botões de Afiliado) ---
+                st.markdown("---")
+                col_mon1, col_mon2 = st.columns(2)
+                with col_mon1:
+                    # Link fictício da Binance - DEPOIS VOCÊ COLOCA O SEU!
+                    st.markdown('<a href="https://accounts.binance.com/register" target="_blank" class="affiliate-btn">🟡 Criar Conta na Binance</a>', unsafe_allow_html=True)
+                with col_mon2:
+                     # Link fictício da Ledger
+                    st.markdown('<a href="https://shop.ledger.com/" target="_blank" class="affiliate-btn ledger-btn">🔒 Proteger Moedas (Ledger)</a>', unsafe_allow_html=True)
+                
+                # --- ÁREA DA IA (Corrigida) ---
                 st.markdown("### 🧠 Análise do Gemini")
-                st.info(get_ai_analysis(df, news))
+                
+                # Aqui eu uso uma CAIXA HTML PERSONALIZADA para garantir que o texto fique branco
+                analise_texto = get_ai_analysis(df, news)
+                st.markdown(f"""
+                <div class="ai-box">
+                    {analise_texto.replace(chr(10), '<br>')} 
+                </div>
+                """, unsafe_allow_html=True)
+                
             else:
                 st.error("Erro ao carregar dados.")
 
-# --- CONTROLADOR PRINCIPAL ---
+# --- CONTROLADOR ---
 if st.session_state.page == 'home':
     show_home()
 elif st.session_state.page == 'analise':
