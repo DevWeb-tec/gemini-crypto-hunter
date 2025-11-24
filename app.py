@@ -160,7 +160,7 @@ def show_home():
     
     col1, col2, col3 = st.columns([3, 2, 3])
     with col2:
-        st.button("🚀 RASTREAR BALEIAS", on_click=ir_para_analise, use_container_width=True)
+        st.button("🚀 RASTREAR BALEIAS E ANALISAR MERCADOS", on_click=ir_para_analise, use_container_width=True)
 
 # --- PÁGINA 2: ANÁLISE ---
 def show_analysis():
@@ -170,10 +170,35 @@ def show_analysis():
             background-image: none !important;
             background-color: #0e1117 !important;
         }
-        /* Títulos gerais brancos */
-        h1, h2, h3, h4 { color: #ffffff !important; }
+        /* CORREÇÃO DE CORES (Tudo Branco e Negrito) */
         
-        /* AQUI ESTÁ A CORREÇÃO: Força BRUTA na cor branca para o texto da IA */
+        /* 1. Títulos das Métricas (RSI, Tendência, etc) */
+        div[data-testid="stMetricLabel"] p {
+            color: #ffffff !important;
+            font-weight: 900 !important; /* Negrito */
+            font-size: 1.1rem !important;
+        }
+        div[data-testid="stMetricLabel"] {
+             color: #ffffff !important; /* Fallback */
+        }
+        
+        /* 2. Valores das Métricas (Os números) */
+        div[data-testid="stMetricValue"] {
+            color: #00d2ff !important; /* Azul Neon para o número */
+            font-weight: 900 !important;
+        }
+
+        /* 3. Texto da IA */
+        .ai-box, .ai-box p, .ai-box div, .ai-box span, .ai-box li {
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            font-size: 18px !important;
+            line-height: 1.6 !important;
+        }
+        .ai-box strong {
+            color: #00d2ff !important;
+            font-weight: 900 !important;
+        }
         .ai-box {
             background-color: rgba(20, 25, 40, 0.9);
             border: 2px solid #00d2ff;
@@ -182,20 +207,9 @@ def show_analysis():
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
             margin-top: 20px;
         }
-        
-        /* Isso obriga todos os textos DENTRO da caixa a serem brancos e negritos */
-        .ai-box, .ai-box p, .ai-box div, .ai-box span, .ai-box li {
-            color: #ffffff !important;
-            font-weight: 600 !important; /* Mais grosso */
-            font-size: 18px !important; /* Maior */
-            line-height: 1.6 !important;
-        }
-        /* Destaque para negritos */
-        .ai-box strong {
-            color: #00d2ff !important; /* Azul Neon para palavras chave */
-            font-weight: 900 !important;
-        }
 
+        h1, h2, h3 { color: #ffffff !important; }
+        
         .affiliate-btn {
             display: block;
             width: 100%;
@@ -235,18 +249,21 @@ def show_analysis():
                 obv_diff = latest['OBV'] - prev['OBV']
                 c4.metric("Fluxo Baleias", "Entrando 🟢" if obv_diff > 0 else "Saindo 🔴", delta=f"{obv_diff:,.0f}")
 
-                # Gráfico
+                # Gráfico (Correção das Legendas para Branco)
                 st.markdown("---")
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name="Preço", line=dict(color='#fbbf24', width=3)))
                 fig.add_trace(go.Scatter(x=df.index, y=df['OBV'], name="Volume Baleias", line=dict(color='#00d2ff', width=2), yaxis='y2', fill='tozeroy'))
+                
                 fig.update_layout(
                     height=500, 
-                    title="Preço vs. Acumulação das Baleias (6 Meses)",
+                    title=dict(text="Preço vs. Acumulação das Baleias (6 Meses)", font=dict(color="white", size=20)), # Título Branco
                     template="plotly_dark",
                     yaxis2=dict(overlaying='y', side='right'), 
                     paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)'
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    legend=dict(font=dict(color="white", size=14, family="Arial Black")), # LEGENDA BRANCA E GROSSA
+                    font=dict(color="white") # Tudo branco no gráfico
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
@@ -261,8 +278,6 @@ def show_analysis():
                 # ÁREA DA IA
                 st.markdown("### 🧠 Análise Completa do Gemini")
                 analise_texto = get_ai_analysis(df, news)
-                
-                # Injeção HTML com classe correta
                 st.markdown(f"""
                 <div class="ai-box">
                     {analise_texto.replace(chr(10), '<br>')} 
