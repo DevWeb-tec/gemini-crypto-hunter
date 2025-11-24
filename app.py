@@ -51,7 +51,6 @@ def get_news():
     results = []
     try:
         with DDGS() as ddgs:
-            # Adicionei "economia eua" e "fed" para pegar o cenário Macro
             query_br = "Bitcoin mercado financeiro economia eua fed taxa juros brasil criptomoedas"
             news_br = ddgs.text(query_br, region='br-br', timelimit='d', max_results=4)
             if news_br:
@@ -84,12 +83,12 @@ def get_ai_analysis(df, news_text):
        Analise o RSI e o OBV. É hora de compra ou venda?
        
     2. 🌍 **CENÁRIO MACRO ECONÔMICO (IMPORTANTE):**
-       Analise as notícias sobre Economia (Fed, Juros, Dólar) e diga como isso impacta o Bitcoin hoje. O mercado está com medo ou ganância?
+       Analise as notícias sobre Economia (Fed, Juros, Dólar) e diga como isso impacta o Bitcoin hoje.
        
     3. 🔮 **VEREDITO FINAL (3 DIAS):**
        O preço deve Subir, Cair ou Lateralizar? Dê uma previsão clara.
        
-    IMPORTANTE: Use negrito nas partes chaves para facilitar a leitura.
+    IMPORTANTE: Use negrito nas partes chaves.
     """
     model = genai.GenerativeModel('gemini-2.5-flash')
     try:
@@ -161,39 +160,48 @@ def show_home():
     
     col1, col2, col3 = st.columns([3, 2, 3])
     with col2:
-        st.button("🚀 RASTREAR BALEIAS E ANALISAR MERCADOS", on_click=ir_para_analise, use_container_width=True)
+        st.button("🚀 RASTREAR BALEIAS", on_click=ir_para_analise, use_container_width=True)
 
 # --- PÁGINA 2: ANÁLISE ---
 def show_analysis():
-    # CSS TURBINADO PARA LEITURA
     st.markdown("""
     <style>
         [data-testid="stAppViewContainer"] {
             background-image: none !important;
             background-color: #0e1117 !important;
         }
-        /* Força TODAS as letras a serem brancas */
-        p, h1, h2, h3, h4, h5, h6, li, strong, span {
-            color: #ffffff !important;
-        }
-        /* Caixa da IA com alto contraste */
+        /* Títulos gerais brancos */
+        h1, h2, h3, h4 { color: #ffffff !important; }
+        
+        /* AQUI ESTÁ A CORREÇÃO: Força BRUTA na cor branca para o texto da IA */
         .ai-box {
-            background-color: rgba(20, 25, 40, 0.9); /* Fundo bem escuro */
-            border: 2px solid #00d2ff; /* Borda Neon */
+            background-color: rgba(20, 25, 40, 0.9);
+            border: 2px solid #00d2ff;
             border-radius: 15px;
             padding: 30px;
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
             margin-top: 20px;
-            font-size: 1.1rem; /* Letra um pouco maior */
-            line-height: 1.6;
-            font-weight: 500; /* Um pouco mais grosso que o normal */
         }
+        
+        /* Isso obriga todos os textos DENTRO da caixa a serem brancos e negritos */
+        .ai-box, .ai-box p, .ai-box div, .ai-box span, .ai-box li {
+            color: #ffffff !important;
+            font-weight: 600 !important; /* Mais grosso */
+            font-size: 18px !important; /* Maior */
+            line-height: 1.6 !important;
+        }
+        /* Destaque para negritos */
+        .ai-box strong {
+            color: #00d2ff !important; /* Azul Neon para palavras chave */
+            font-weight: 900 !important;
+        }
+
         .affiliate-btn {
             display: block;
             width: 100%;
             padding: 15px;
             background-color: #FCD535; 
-            color: black !important; /* Texto preto no botão amarelo */
+            color: black !important;
             text-align: center;
             text-decoration: none;
             font-weight: 900;
@@ -242,7 +250,7 @@ def show_analysis():
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # --- ÁREA DE LUCRO (Afiliados) ---
+                # ÁREA DE LUCRO
                 st.markdown("---")
                 col_mon1, col_mon2 = st.columns(2)
                 with col_mon1:
@@ -250,11 +258,11 @@ def show_analysis():
                 with col_mon2:
                     st.markdown('<a href="https://shop.ledger.com/" target="_blank" class="affiliate-btn ledger-btn">🔒 Proteger Moedas com Ledger</a>', unsafe_allow_html=True)
                 
-                # --- ÁREA DA IA (Texto Branco e Macroeconomia) ---
+                # ÁREA DA IA
                 st.markdown("### 🧠 Análise Completa do Gemini")
-                
                 analise_texto = get_ai_analysis(df, news)
-                # Injeta o texto formatado
+                
+                # Injeção HTML com classe correta
                 st.markdown(f"""
                 <div class="ai-box">
                     {analise_texto.replace(chr(10), '<br>')} 
