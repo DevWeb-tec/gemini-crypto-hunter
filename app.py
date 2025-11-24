@@ -51,8 +51,9 @@ def get_news():
     results = []
     try:
         with DDGS() as ddgs:
-            query_br = "Bitcoin análise tendência infomoney cointelegraph brasil investnews"
-            news_br = ddgs.text(query_br, region='br-br', timelimit='d', max_results=3)
+            # Adicionei "economia eua" e "fed" para pegar o cenário Macro
+            query_br = "Bitcoin mercado financeiro economia eua fed taxa juros brasil criptomoedas"
+            news_br = ddgs.text(query_br, region='br-br', timelimit='d', max_results=4)
             if news_br:
                 for r in news_br:
                     title = r.get('title', 'Sem titulo')
@@ -72,10 +73,23 @@ def get_ai_analysis(df, news_text):
     price_trend = "ALTA" if last['EMA_20'] > last['EMA_50'] else "BAIXA"
     
     prompt = f"""
-    Aja como um Analista On-Chain Profissional.
-    DADOS BTC/USD: Preço ${last['Close']:.2f} | RSI {last['RSI']:.2f} | Tendência {price_trend} | Baleias (OBV) {obv_trend}
-    NOTÍCIAS: {news_text}
-    TAREFA: Análise curta e direta sobre o preço e as baleias para os próximos 3 dias. Use markdown, negrito e emojis.
+    Aja como um Analista Sênior de Investimentos.
+    
+    DADOS TÉCNICOS BTC: Preço ${last['Close']:.2f} | RSI {last['RSI']:.2f} | Tendência {price_trend} | Baleias (OBV) {obv_trend}
+    MANCHETES DO MERCADO: {news_text}
+    
+    TAREFA: Crie uma análise dividida em 3 partes curtas (Use Markdown):
+    
+    1. 🐳 **O QUE AS BALEIAS E GRÁFICOS DIZEM:**
+       Analise o RSI e o OBV. É hora de compra ou venda?
+       
+    2. 🌍 **CENÁRIO MACRO ECONÔMICO (IMPORTANTE):**
+       Analise as notícias sobre Economia (Fed, Juros, Dólar) e diga como isso impacta o Bitcoin hoje. O mercado está com medo ou ganância?
+       
+    3. 🔮 **VEREDITO FINAL (3 DIAS):**
+       O preço deve Subir, Cair ou Lateralizar? Dê uma previsão clara.
+       
+    IMPORTANTE: Use negrito nas partes chaves para facilitar a leitura.
     """
     model = genai.GenerativeModel('gemini-2.5-flash')
     try:
@@ -84,7 +98,7 @@ def get_ai_analysis(df, news_text):
     except Exception as e:
         return f"Erro na IA: {e}"
 
-# --- PÁGINA 1: HOME (VISUAL 3D) ---
+# --- PÁGINA 1: HOME ---
 def show_home():
     st.markdown("""
     <style>
@@ -130,7 +144,7 @@ def show_home():
     """, unsafe_allow_html=True)
 
     st.markdown('<h1 class="big-title">🐋 GEMINI CRYPTO HUNTER</h1>', unsafe_allow_html=True)
-    st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Notícias em Tempo Real</p>', unsafe_allow_html=True)
+    st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Macroeconomia em Tempo Real</p>', unsafe_allow_html=True)
     
     logos_html = """
     <div class="crypto-bar">
@@ -147,54 +161,56 @@ def show_home():
     
     col1, col2, col3 = st.columns([3, 2, 3])
     with col2:
-        st.button("🚀 RASTREAR BALEIAS E ANÁLISE DE MERCADO", on_click=ir_para_analise, use_container_width=True)
+        st.button("🚀 RASTREAR BALEIAS E ANALISAR MERCADOS", on_click=ir_para_analise, use_container_width=True)
 
-# --- PÁGINA 2: ANÁLISE (FUNDO SÓLIDO + MONETIZAÇÃO) ---
+# --- PÁGINA 2: ANÁLISE ---
 def show_analysis():
-    # CSS para deixar tudo bonito e legível
+    # CSS TURBINADO PARA LEITURA
     st.markdown("""
     <style>
         [data-testid="stAppViewContainer"] {
             background-image: none !important;
             background-color: #0e1117 !important;
         }
-        /* Estilo das letras para BRANCO */
-        p, h1, h2, h3, li {
-            color: #e6edf3 !important;
+        /* Força TODAS as letras a serem brancas */
+        p, h1, h2, h3, h4, h5, h6, li, strong, span {
+            color: #ffffff !important;
         }
-        /* Caixa da IA Personalizada */
+        /* Caixa da IA com alto contraste */
         .ai-box {
-            background-color: rgba(30, 41, 59, 0.7);
-            border: 1px solid #00d2ff;
+            background-color: rgba(20, 25, 40, 0.9); /* Fundo bem escuro */
+            border: 2px solid #00d2ff; /* Borda Neon */
             border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.1);
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
             margin-top: 20px;
+            font-size: 1.1rem; /* Letra um pouco maior */
+            line-height: 1.6;
+            font-weight: 500; /* Um pouco mais grosso que o normal */
         }
-        /* Botões de Afiliados */
         .affiliate-btn {
             display: block;
             width: 100%;
             padding: 15px;
-            background-color: #FCD535; /* Cor da Binance */
-            color: black;
+            background-color: #FCD535; 
+            color: black !important; /* Texto preto no botão amarelo */
             text-align: center;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 900;
             font-size: 18px;
             border-radius: 10px;
             margin-bottom: 10px;
             transition: 0.3s;
         }
-        .affiliate-btn:hover { opacity: 0.8; }
-        .ledger-btn { background-color: #1C1C1C; color: white; border: 1px solid white; }
+        .affiliate-btn:hover { opacity: 0.9; transform: scale(1.01); }
+        .ledger-btn { background-color: #1C1C1C; color: white !important; border: 2px solid white; }
     </style>
     """, unsafe_allow_html=True)
 
     st.button("⬅️ Voltar para Capa", on_click=voltar_home)
 
     if configure_genai():
-        with st.spinner("🤖 O Gemini está lendo os dados on-chain..."):
+        with st.spinner("🤖 Lendo gráficos, notícias do Fed e dados on-chain..."):
             df = get_data()
             if df is not None:
                 news = get_news()
@@ -226,21 +242,19 @@ def show_analysis():
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # --- ÁREA DE LUCRO (Botões de Afiliado) ---
+                # --- ÁREA DE LUCRO (Afiliados) ---
                 st.markdown("---")
                 col_mon1, col_mon2 = st.columns(2)
                 with col_mon1:
-                    # Link fictício da Binance - DEPOIS VOCÊ COLOCA O SEU!
-                    st.markdown('<a href="https://accounts.binance.com/register" target="_blank" class="affiliate-btn">🟡 Criar Conta na Binance</a>', unsafe_allow_html=True)
+                    st.markdown('<a href="https://accounts.binance.com/register" target="_blank" class="affiliate-btn">🟡 Abrir conta na Binance (Seguro)</a>', unsafe_allow_html=True)
                 with col_mon2:
-                     # Link fictício da Ledger
-                    st.markdown('<a href="https://shop.ledger.com/" target="_blank" class="affiliate-btn ledger-btn">🔒 Proteger Moedas (Ledger)</a>', unsafe_allow_html=True)
+                    st.markdown('<a href="https://shop.ledger.com/" target="_blank" class="affiliate-btn ledger-btn">🔒 Proteger Moedas com Ledger</a>', unsafe_allow_html=True)
                 
-                # --- ÁREA DA IA (Corrigida) ---
-                st.markdown("### 🧠 Análise do Gemini")
+                # --- ÁREA DA IA (Texto Branco e Macroeconomia) ---
+                st.markdown("### 🧠 Análise Completa do Gemini")
                 
-                # Aqui eu uso uma CAIXA HTML PERSONALIZADA para garantir que o texto fique branco
                 analise_texto = get_ai_analysis(df, news)
+                # Injeta o texto formatado
                 st.markdown(f"""
                 <div class="ai-box">
                     {analise_texto.replace(chr(10), '<br>')} 
