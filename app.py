@@ -13,7 +13,7 @@ from ta.volume import OnBalanceVolumeIndicator
 
 # --- CONFIGURAÇÃO INICIAL ---
 load_dotenv()
-st.set_page_config(page_title="Gemini Whale Hunter", page_icon="🐋", layout="wide")
+st.set_page_config(page_title="Caçador de Baleias Gemini", page_icon="🐋", layout="wide")
 
 # --- GERENCIAMENTO DE ESTADO ---
 if 'page' not in st.session_state:
@@ -38,14 +38,25 @@ def configure_genai():
     return True
 
 def get_data():
-    ticker = yf.Ticker("BTC-USD")
-    df = ticker.history(period="6mo")
-    if df.empty: return None
-    df["RSI"] = RSIIndicator(close=df["Close"], window=14).rsi()
-    df["EMA_20"] = EMAIndicator(close=df["Close"], window=20).ema_indicator()
-    df["EMA_50"] = EMAIndicator(close=df["Close"], window=50).ema_indicator()
-    df["OBV"] = OnBalanceVolumeIndicator(close=df["Close"], volume=df["Volume"]).on_balance_volume()
-    return df
+    try:
+        ticker = yf.Ticker("BTC-USD")
+        df = ticker.history(period="6mo")
+        if df.empty: return None
+        df["RSI"] = RSIIndicator(close=df["Close"], window=14).rsi()
+        df["EMA_20"] = EMAIndicator(close=df["Close"], window=20).ema_indicator()
+        df["EMA_50"] = EMAIndicator(close=df["Close"], window=50).ema_indicator()
+        df["OBV"] = OnBalanceVolumeIndicator(close=df["Close"], volume=df["Volume"]).on_balance_volume()
+        return df
+    except Exception as e:
+        return None
+
+def get_fibonacci_data():
+    try:
+        ticker = yf.Ticker("BTC-USD")
+        df = ticker.history(period="1mo")
+        return df
+    except:
+        return None
 
 def get_news():
     results = []
@@ -142,7 +153,7 @@ def show_home():
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown('<h1 class="big-title">🐋 GEMINI CRYPTO HUNTER</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 class="big-title">🐋 CAÇADOR DE CRIPTOMOEDAS GEMINI</h1>', unsafe_allow_html=True)
     st.markdown('<p class="subtitle">Inteligência Artificial rastreando Baleias, Preço e Macroeconomia em Tempo Real</p>', unsafe_allow_html=True)
     
     logos_html = """
@@ -170,25 +181,30 @@ def show_analysis():
             background-image: none !important;
             background-color: #0e1117 !important;
         }
-        /* CORREÇÃO DE CORES (Tudo Branco e Negrito) */
         
-        /* 1. Títulos das Métricas (RSI, Tendência, etc) */
+        /* --- CORREÇÃO DEFINITIVA DAS CORES --- */
+        
+        /* 1. Títulos das Métricas (Preço BTC, RSI, etc) - AGORA VAI! */
+        div[data-testid="stMetricLabel"] {
+            color: #ffffff !important; 
+        }
         div[data-testid="stMetricLabel"] p {
             color: #ffffff !important;
-            font-weight: 900 !important; /* Negrito */
-            font-size: 1.1rem !important;
         }
-        div[data-testid="stMetricLabel"] {
-             color: #ffffff !important; /* Fallback */
+        div[data-testid="stMetricLabel"] > div {
+            color: #ffffff !important;
         }
-        
-        /* 2. Valores das Métricas (Os números) */
+        label[data-testid="stMetricLabel"] {
+            color: #ffffff !important;
+        }
+
+        /* 2. Valores das Métricas (Os números grandes) - Neon */
         div[data-testid="stMetricValue"] {
-            color: #00d2ff !important; /* Azul Neon para o número */
+            color: #00d2ff !important; 
             font-weight: 900 !important;
         }
 
-        /* 3. Texto da IA */
+        /* 3. Textos Gerais e IA */
         .ai-box, .ai-box p, .ai-box div, .ai-box span, .ai-box li {
             color: #ffffff !important;
             font-weight: 600 !important;
@@ -207,9 +223,9 @@ def show_analysis():
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
             margin-top: 20px;
         }
-
         h1, h2, h3 { color: #ffffff !important; }
         
+        /* Botões de Afiliados */
         .affiliate-btn {
             display: block;
             width: 100%;
@@ -249,7 +265,7 @@ def show_analysis():
                 obv_diff = latest['OBV'] - prev['OBV']
                 c4.metric("Fluxo Baleias", "Entrando 🟢" if obv_diff > 0 else "Saindo 🔴", delta=f"{obv_diff:,.0f}")
 
-                # Gráfico (Correção das Legendas para Branco)
+                # Gráfico Principal
                 st.markdown("---")
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(x=df.index, y=df['Close'], name="Preço", line=dict(color='#fbbf24', width=3)))
@@ -257,15 +273,56 @@ def show_analysis():
                 
                 fig.update_layout(
                     height=500, 
-                    title=dict(text="Preço vs. Acumulação das Baleias (6 Meses)", font=dict(color="white", size=20)), # Título Branco
+                    title=dict(text="Preço vs. Acumulação das Baleias (6 Meses)", font=dict(color="white", size=20)),
                     template="plotly_dark",
                     yaxis2=dict(overlaying='y', side='right'), 
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
-                    legend=dict(font=dict(color="white", size=14, family="Arial Black")), # LEGENDA BRANCA E GROSSA
-                    font=dict(color="white") # Tudo branco no gráfico
+                    legend=dict(font=dict(color="white", size=14, family="Arial Black")),
+                    font=dict(color="white")
                 )
                 st.plotly_chart(fig, use_container_width=True)
+
+                # --- FIBONACCI (Gráfico e Dados) ---
+                st.markdown("### 📐 Projeção de Alvos (Fibonacci)")
+                
+                df_fib = get_fibonacci_data()
+                
+                if df_fib is not None:
+                    maximo = df_fib['High'].max()
+                    minimo = df_fib['Low'].min()
+                    dif = maximo - minimo
+                    ret_38 = minimo + (dif * 0.382)
+                    ret_50 = minimo + (dif * 0.5)
+                    ret_61 = minimo + (dif * 0.618)
+                    
+                    if st.button("Traçar Gráfico Fibonacci e Alvos"):
+                        col_fib1, col_fib2 = st.columns([1, 2])
+                        
+                        with col_fib1:
+                            st.info(f"🎯 **Alvo 1 (38.2%)**\n# ${ret_38:,.2f}")
+                            st.info(f"🎯 **Alvo 2 (50.0%)**\n# ${ret_50:,.2f}")
+                            st.success(f"🏆 **GOLDEN POCKET (61.8%)**\n# ${ret_61:,.2f}")
+                        
+                        with col_fib2:
+                            # Gráfico de Fibonacci Visual
+                            fig_fib = go.Figure()
+                            # Candle simples para não pesar
+                            fig_fib.add_trace(go.Scatter(x=df_fib.index, y=df_fib['Close'], name="Preço", line=dict(color='yellow')))
+                            
+                            # Linhas Horizontais
+                            fig_fib.add_hline(y=ret_61, line_dash="dash", line_color="#00FF00", annotation_text="Golden Pocket")
+                            fig_fib.add_hline(y=ret_50, line_dash="dot", line_color="cyan", annotation_text="50%")
+                            
+                            fig_fib.update_layout(
+                                title="Gráfico de Projeção Fibonacci (1 Mês)",
+                                template="plotly_dark",
+                                height=400,
+                                font=dict(color="white"),
+                                paper_bgcolor='rgba(0,0,0,0)',
+                                plot_bgcolor='rgba(0,0,0,0)'
+                            )
+                            st.plotly_chart(fig_fib, use_container_width=True)
 
                 # ÁREA DE LUCRO
                 st.markdown("---")
@@ -283,9 +340,42 @@ def show_analysis():
                     {analise_texto.replace(chr(10), '<br>')} 
                 </div>
                 """, unsafe_allow_html=True)
+
+                # --- ESTÚDIO YOUTUBER (Com Fibonacci) ---
+                st.markdown("---")
+                st.subheader("🎙️ Estúdio de Gravação: Gerar Roteiro YouTuber")
+                st.info("Clique abaixo para transformar tudo (Inclusive Fibonacci) em um roteiro falado.")
+                
+                if st.button("📝 Criar Roteiro Completo"):
+                    with st.spinner("✍️ Escrevendo roteiro com dados de Fibonacci..."):
+                        
+                        dados_fib = "Dados indisponíveis"
+                        if df_fib is not None:
+                            dados_fib = f"O Golden Pocket está em ${ret_61:,.2f}. Fiquem de olho nesse valor!"
+                        
+                        model_roteiro = genai.GenerativeModel('gemini-2.5-flash')
+                        prompt_roteiro = f"""
+                        Aja como um YouTuber de Criptomoedas brasileiro.
+                        
+                        Análise Técnica: {analise_texto}
+                        Fibonacci: {dados_fib}
+                        
+                        Crie um ROTEIRO DE FALA curto e energizado para o vídeo.
+                        - Cumprimente a galera (Caçadores de Baleias).
+                        - Fale do preço e do sentimento.
+                        - Cite o GOLDEN POCKET de Fibonacci como dica chave.
+                        - Termine pedindo like.
+                        """
+                        try:
+                            resp_rot = model_roteiro.generate_content(prompt_roteiro)
+                            roteiro_final = resp_rot.text
+                            st.text_area("📋 Roteiro:", value=roteiro_final, height=400)
+                            st.download_button("Baixar Roteiro (.txt)", data=roteiro_final, file_name="roteiro.txt")
+                        except Exception as e:
+                            st.error(f"Erro: {e}")
                 
             else:
-                st.error("Erro ao carregar dados.")
+                st.error("Erro ao carregar dados. Verifique sua conexão.")
 
 # --- CONTROLADOR ---
 if st.session_state.page == 'home':
